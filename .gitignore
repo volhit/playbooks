@@ -1,0 +1,4 @@
+*.swp
+hosts
+host_vars/*
+group_vars/*
