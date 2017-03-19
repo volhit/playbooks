@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Get Linode API key
+      include_vars:
+        file: '{{ inventory_dir }}/group_vars/linode.yml'
+
+    - name: List linodes
+      shell: LINODE_API_KEY={{ linode_api_key }} {{ inventory_dir }}/bin/list_linodes.py
+      register: linode_data
+
+    - name: Display results
+      debug:
+        msg: "{{ linode_data.stdout.split('\n') }}"

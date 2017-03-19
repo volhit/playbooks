@@ -1,0 +1,69 @@
+---
+# require `linode_python` to be installed
+
+- hosts: linode
+  gather_facts: no
+
+  tasks:
+    - name: Check for root ssh key exists
+      local_action:
+        module: shell ssh-keygen -b 4096 -t rsa -f {{ local_user_home }}/.ssh/root.{{ inventory_hostname }} -q -N "" -C root@memo.place
+        args:
+          creates: '{{ local_user_home }}/.ssh/root.{{ inventory_hostname }}'
+
+    - name: Check for deployer ssh key exists
+      local_action:
+        module: shell ssh-keygen -b 4096 -t rsa -f {{ local_user_home }}/.ssh/{{ deploy_user }}.{{ inventory_hostname }} -q -N "" -C {{ deploy_user }}@memo.place
+        args:
+          creates: '{{ local_user_home }}/.ssh/{{ deploy_user }}.{{ inventory_hostname }}'
+
+    - name: Create nodes
+      local_action:
+        module: linode
+        linode_id: '{{ linode_id }}'
+        state: present
+        name: '{{ linode_name }}'
+        distribution: '{{ linode_distribution_id }}'
+        api_key: '{{ linode_api_key }}'
+        password: '{{ ansible_become_pass }}'
+        ssh_pub_key: "{{ lookup('file', local_user_home + '/.ssh/root.' + inventory_hostname + '.pub') }}"
+        datacenter: '{{ linode_datacenter_id }}'
+        wait: yes
+        wait_timeout: 600
+        swap: 1024
+        plan: '{{ linode_plan }}'
+      register: linode_response
+
+    - name: Output for debugging
+      debug:
+        var: linode_response
+
+
+    - name: Wait for SSH to come up
+      local_action: 'wait_for host={{ linode_response.instance.ipv4 }} port=22 timeout=1200 state=started'
+      when: linode_response.changed
+
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+
+    - name: Create User for deployment
+      user:
+        name: '{{ deploy_user }}'
+        comment: "I Can Deploy"
+        state: present
+        createhome: yes
+        groups: wheel, sudo
+        append: yes
+        password: '{{ ansible_become_pass }}'
+
+    - name: Set up authorized keys for the deployer user
+      authorized_key: user={{ deploy_user }} key={{ item }}
+      with_file:
+        - '{{ local_user_home }}/.ssh/{{ deploy_user }}.{{ inventory_hostname }}.pub'
+
+    - name: Done!
+      debug:
+        msg: Installation tasks for {{ inventory_hostname }} completed successfully
+      delegate_to: localhost
