@@ -1,0 +1,16 @@
+---
+
+- hosts: linode
+  roles:
+     - openvpn
+
+  vars:
+    openvpn_use_pam: yes
+    openvpn_clients: [router, iphone, macbook]
+    openvpn_unified_client_profiles: yes
+    openvpn_tls_auth: yes
+    openvpn_use_pam_users:
+      - { name: 'router',  password: 'Router-{{ openvpn_pass_base }}' }
+      - { name: 'iphone',  password: 'iPhone-{{ openvpn_pass_base }}' }
+      - { name: 'macbook', password: 'Retina-{{ openvpn_pass_base }}' }
+
