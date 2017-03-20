@@ -1,10 +1,14 @@
 # My ansible playbooks
 
-## Install Ubuntu 16.04 LTS (`playbooks/system.install.yml`)
+## Install Ubuntu 16.04 LTS
+
+[source](playbooks/system.install.yml)
 
 This playbook is for very basic system configuration, including OS installation itself.
 
-## About OpenVPN (`openvpn.setup.yml`)
+## About OpenVPN
+
+[source](openvpn.setup.yml)
 
 After OpenVPN setup we need to open port (1194) and do firewall settings:
 
