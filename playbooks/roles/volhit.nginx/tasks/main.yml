@@ -1,0 +1,12 @@
+---
+- name: Install nginx
+  apt: name=nginx state=installed
+- name: Start nginx
+  service: name=nginx state=running
+- name: Default nginx config
+  template: src=default dest=/etc/nginx/sites-available/default
+  notify: Restart Nginx
+- name: Open ports (Nginx Full)
+  ufw:
+    rule: allow
+    name: Nginx Full
