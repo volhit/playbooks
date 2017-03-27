@@ -48,22 +48,33 @@
         name: wheel
         state: present
 
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+
     - name: Create User for deployment
       user:
         name: '{{ deploy_user }}'
         comment: "I Can Deploy"
         state: present
         createhome: yes
-        groups: wheel, sudo
+        groups: wheel
         append: yes
-        password: '{{ ansible_become_pass }}'
 
     - name: Set up authorized keys for the deployer user
       authorized_key: user={{ deploy_user }} key={{ item }}
       with_file:
         - '{{ local_user_home }}/.ssh/{{ deploy_user }}.{{ inventory_hostname }}.pub'
 
+    - name: set timezone to Europe/Moscow
+      timezone:
+        name: Europe/Moscow
+
     - name: Done!
       debug:
         msg: Installation tasks for {{ inventory_hostname }} completed successfully
       delegate_to: localhost
+
