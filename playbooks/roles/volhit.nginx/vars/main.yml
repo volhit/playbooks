@@ -1,2 +1,3 @@
 ---
-# vars file for volhit.nginx
+letsencrypt_email: support@{{ inventory_hostname }}
+nginx_dns_resolvers: '8.8.8.8 8.8.4.4'

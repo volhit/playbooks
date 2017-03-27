@@ -1,12 +1,76 @@
 ---
 - name: Install nginx
   apt: name=nginx state=installed
-- name: Start nginx
-  service: name=nginx state=running
+
+- stat:
+    path: /etc/nginx/sites-available/default-with-secure
+  register: secured_config
+
 - name: Default nginx config
-  template: src=default dest=/etc/nginx/sites-available/default
-  notify: Restart Nginx
+  template: src=nginx/default dest=/etc/nginx/sites-available/default
+  notify: Reload Nginx
+  when: not secured_config.stat.exists
+
+- name: Link default to secured config
+  file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  when: not secured_config.stat.exists
+
+- name: Default landing page
+  template: src=html/index.html dest=/usr/share/nginx/html/index.html
+  notify: Reload Nginx
+
 - name: Open ports (Nginx Full)
   ufw:
     rule: allow
     name: Nginx Full
+
+- name: Check Nginx started
+  service: name=nginx state=running
+
+- name: install letsencrypt script
+  apt: name=letsencrypt state=latest
+
+- name: Configurate letsencrypt
+  template: src=letsencrypt/cli.ini dest=/etc/letsencrypt/cli.ini
+
+- name: Get SSL certificate
+  # TODO: add var with all domains entries
+  shell: letsencrypt certonly -n --agree-tos -d {{ inventory_hostname }} -d www.{{ inventory_hostname }}
+  args:
+    creates: /etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem
+
+- name: Generate Strong Diffie-Hellman Group
+  shell: openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
+  args:
+    creates: /etc/ssl/certs/dhparam.pem
+
+- name: Add Nginx SSL keys snippet
+  template: src=nginx/ssl-keys.conf dest=/etc/nginx/snippets/ssl-{{ inventory_hostname }}.conf
+  notify: Reload Nginx
+
+- name: Add Nginx SSL params snippet
+  template: src=nginx/ssl-params.conf dest=/etc/nginx/snippets/ssl-params.conf
+  notify: Reload Nginx
+
+- name: Enable secured config
+  template: src=nginx/default-with-secure dest=/etc/nginx/sites-available/default-with-secure
+  notify: Reload Nginx
+
+- name: Link default to secured config
+  file:
+    src: /etc/nginx/sites-available/default-with-secure
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify: Restart Nginx
+
+- name: Adding renew task for letsencrypt
+  cron:
+    name: Renew letsencrypt keys
+    minute: 53
+    hour: 4
+    dow: 1
+    user: root
+    job: '(/usr/bin/letsencrypt renew >> /var/log/letsencrypt-renew.log) && systemctl reload nginx'

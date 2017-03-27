@@ -1,4 +1,5 @@
 *.swp
+*.retry
 hosts
 host_vars/*
 group_vars/*
