@@ -69,8 +69,9 @@
 - name: Adding renew task for letsencrypt
   cron:
     name: Renew letsencrypt keys
-    minute: 53
-    hour: 4
+    minute: 37
+    hour: 2
     dow: 1
     user: root
-    job: '(/usr/bin/letsencrypt renew >> /var/log/letsencrypt-renew.log) && systemctl reload nginx'
+    # TODO: do not reload nginx if renew is not made
+    job: '/usr/bin/letsencrypt renew >> /var/log/letsencrypt-renew.log && /bin/systemctl reload nginx'
