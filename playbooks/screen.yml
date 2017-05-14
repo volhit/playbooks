@@ -1,0 +1,7 @@
+---
+- hosts: linode
+  tasks:
+    - name: Install htop
+      apt:
+        name: screen
+        state: latest

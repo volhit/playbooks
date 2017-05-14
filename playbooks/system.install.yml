@@ -54,9 +54,10 @@
         comment: "I Can Deploy"
         state: present
         createhome: yes
-        groups: wheel, sudo
+        groups: wheel
         append: yes
         password: '{{ ansible_become_pass }}'
+        shell: /bin/bash
 
     - name: Set up authorized keys for the deployer user
       authorized_key: user={{ deploy_user }} key={{ item }}
