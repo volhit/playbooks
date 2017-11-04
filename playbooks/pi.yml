@@ -1,0 +1,5 @@
+---
+- hosts: pi
+  become: true
+  roles:
+    - volhit.mqtt.broker

@@ -1,0 +1,45 @@
+---
+
+- name: Ensure Mosquitto broker GPG keys are present
+  apt_key:
+    url: http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+    state: present
+
+- name: Add Mosquitto repo
+  apt_repository:
+    repo: deb http://repo.mosquitto.org/debian jessie main
+    state: present
+    update_cache: yes
+
+- name: Install Mosquitto Broker, Clients, and API
+  apt:
+    pkg: "{{ item }}"
+    update_cache: yes
+    state: installed
+  with_items:
+    - mosquitto
+    - mosquitto-clients
+    - python-mosquitto
+
+- name: Stop mqtt broker
+  service:
+    name: mosquitto
+    state: stopped
+
+- name: Set Mosquitto credentials
+  expect:
+    command: mosquitto_passwd -c {{ mosquitto_password_file }} {{ mqtt_user }}
+    creates: "{{ mosquitto_password_file }}"
+    responses:
+      "[p,P]assword": "{{ mqtt_password }}"
+
+- name: Configurate Mosquitto
+  template:
+    backup: yes
+    src: mosquitto/mosquitto.conf
+    dest: /etc/mosquitto/mosquitto.conf
+
+- name: Start mqtt broker
+  service:
+    name: mosquitto
+    state: started

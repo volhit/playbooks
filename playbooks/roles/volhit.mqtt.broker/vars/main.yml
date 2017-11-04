@@ -1,0 +1,2 @@
+---
+mosquitto_password_file: /etc/mosquitto/passwd
