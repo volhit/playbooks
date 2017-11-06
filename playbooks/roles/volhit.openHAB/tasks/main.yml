@@ -48,5 +48,6 @@
 - name: start openHAB
   systemd:
     name: openhab2
+    daemon_reload: yes
     enabled: yes
     state: started
