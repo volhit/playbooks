@@ -1,0 +1,52 @@
+---
+- name: add the openHAB 2 Bintray repository key
+  apt_key:
+    url: https://bintray.com/user/downloadSubjectPublicKey?username=openhab
+    state: present
+
+- name: ensure https transport exists
+  apt:
+    pkg: apt-transport-https
+    allow_unauthenticated: yes
+    state: present
+
+- name: add the openHAB 2 Stable Repository
+  apt_repository:
+    repo: deb https://dl.bintray.com/openhab/apt-repo2 stable main
+    state: present
+    update_cache: yes
+
+- name: create /opt/zulu dirctory
+  file:
+    path: '{{ zulu_installation_directory }}'
+    state: directory
+
+- name: get Zulu package (JAVA alternative)
+  unarchive:
+    remote_src: yes
+    src: '{{ zulu_package_url }}'
+    dest: '{{ zulu_installation_directory }}'
+    extra_opts: [--strip-components=1]
+    creates: '{{ zulu_installation_directory }}/bin/java'
+
+- name: correct java to Zulu version
+  alternatives:
+    name: java
+    link: /usr/bin/java
+    path: '{{ zulu_installation_directory }}/jre/bin/java'
+    priority: 100
+
+- name:  install openHAB and addons
+  apt:
+    pkg: "{{ item }}"
+    state: latest
+  with_items:
+    - openhab2
+    - openhab2-addons
+    - openhab2-addons-legacy
+
+- name: start openHAB
+  systemd:
+    name: openhab2
+    enabled: yes
+    state: started

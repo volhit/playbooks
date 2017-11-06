@@ -3,3 +3,4 @@
   become: true
   roles:
     - volhit.mqtt.broker
+    - volhit.openHAB

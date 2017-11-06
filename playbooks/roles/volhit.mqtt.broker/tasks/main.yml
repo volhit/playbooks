@@ -14,8 +14,7 @@
 - name: Install Mosquitto Broker, Clients, and API
   apt:
     pkg: "{{ item }}"
-    update_cache: yes
-    state: installed
+    state: latest
   with_items:
     - mosquitto
     - mosquitto-clients
