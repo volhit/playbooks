@@ -1,0 +1,4 @@
+---
+- hosts: redis
+  roles:
+    - { role: "volhit.redis", redis_database: 2 }

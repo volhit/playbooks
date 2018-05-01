@@ -1,0 +1,22 @@
+---
+- name: Ensure Redis is present
+  apt: pkg={{item}} state=latest
+  with_items:
+    - redis-server
+    - redis-tools
+
+- name: Ensure Redis Configuration
+  notify: Redis Restart
+  template: 
+    src: redis.conf 
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+    mode: 0644
+
+- name: Ensure Redis is started
+  service: 
+    name: redis-server 
+    state: started 
+    enabled: yes
+
